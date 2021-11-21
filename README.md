@@ -36,3 +36,4 @@ Features :
 - Windows/Mac/Linux Support
 - Anpassung der Anzeigegeschwindigkeit für zb. bessere Verwendung im Unterricht
 - selbstständig skalierende Achsen der Diagramme
+- Slider zur Anpassung von Verarbeitungsparameter (zb. Photonenempfindlichkeit)

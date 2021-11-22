@@ -19,6 +19,10 @@ Benötigte Bibliotheken :
 (neuste Versionen werden empfohlen)
 (alle Bibliotheken lassen sich mit dem pip3-Paketmanager installieren)
 
+oder in der Kommandozeile eingeben:
+
+*pip3 install -r requirements.txt*
+
 Einrichtungsfenster:
 
 ![image](https://user-images.githubusercontent.com/53939068/142772317-e7a273a9-a5c0-485c-a6f6-9bfeedc7ebb8.png)

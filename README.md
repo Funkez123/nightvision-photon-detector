@@ -21,7 +21,7 @@ Benötigte Bibliotheken :
 
 oder in der Kommandozeile eingeben:
 
-*pip3 install -r requirements.txt*
+`pip3 install -r requirements.txt`
 
 Einrichtungsfenster:
 
@@ -41,3 +41,4 @@ Features :
 - Anpassung der Anzeigegeschwindigkeit für zb. bessere Verwendung im Unterricht
 - selbstständig skalierende Achsen der Diagramme
 - Slider zur Anpassung von Verarbeitungsparameter (zb. Photonenempfindlichkeit)
+- Custom-Maske zur genaueren Positionsanpassung des Interferenzmusters

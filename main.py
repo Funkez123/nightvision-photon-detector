@@ -31,14 +31,17 @@ max_x = 0 ## maximalwert der Photonen für die Poissonverteilung (bessere Skalie
 videoanzeigen = False ## Zeigt das Ausgangsvideo bei der Verarbeitung standartmäßig nicht
 nphotons = 0  ## Deklarierung der Variable für die Anzahl der Photonen (bei 0)
 slider_fps = 25  ## Bilder Pro sekunde, die standartmäßig für die Verarbeitung verwendet werden
-empfindlichkeit = 11  ## Photonenempfindlichkeits-Schwellwert bei einer Lichtintensitätsabweichung von x+11 (von 0-255)
-min_photons = 5 ## photonenmindestanzahl (auch im slider) um keine Daten bei ausgeschaltetem Nachtsichtgerät zu sammeln
+empfindlichkeit = 30  ## Photonenempfindlichkeits-Schwellwert bei einer Lichtintensitätsabweichung von x+11 (von 0-255)
+min_photons = 2 ## photonenmindestanzahl (auch im slider) um keine Daten bei ausgeschaltetem Nachtsichtgerät zu sammeln
 imghisto_array = []  ## Histogram - Array
 pho_smoothing = 200     ## N(x)-Diagramm Smoothing, bzw rückläufig die Anzahl der Photonen für die Erstellung des Diagramms
 yx_coords = [0,0]     ## 2-Dimensionales Array
 sg_graph_flag = None   ## Flagge für die Erstellung des Diagramms in (PySimpleGUI)
-webcam_select = 0 ## 0 als die Standartwebcam
+webcam_select = 1 ## 0 als die Standartwebcam
 video_var = 0 ## Nummer des aktuell dargestellten Frames links / bzw dessen Zustand in den einzelnen Bearbeitungsstadien
+custommasktl = (65,75)
+custommaskbl = (130,100)
+
 ##############################################################################
 
 
@@ -187,7 +190,6 @@ if webcamvar == True:    ## Webcam einrichtung
     cap = cv2.VideoCapture(webcam_select)
 ################ Hotpixel-Korrektur ################
 
-
 # ließt den ersten Frame und speichert diesen als hotpixel_vorlage
 success, image = cap.read()
 if success:
@@ -238,6 +240,7 @@ Photonen_column = [                 ### Layout der linken Spalte im Fenster
           sg.Button("Vorgang stoppen"),
           sg.VSeperator(),   ## Vertikale Trennung zwischen Layoutspalten
           sg.Button("Poissonverteilung / Matplotlib")],
+          [sg.Button("Interferenz_Maskenbox-anzeigen")],
           [sg.Text('Photonenempfindlichkeit: ', size=(20, 1), font='Helvetica 20'),
           sg.Slider((0,50),empfindlichkeit,1,orientation="h",size=(20,15),key="Photonenempfindlichkeit")],
           [sg.Text('Mindestphotonenpixel: ', size=(20, 1), font='Helvetica 20'),
@@ -255,8 +258,9 @@ matplotlib_column = [   ### Layout der rechten Spalte
         [sg.Text(' ', size=(10, 1), font='Helvetica 16'),
         sg.Image(filename='', key='-image_right-')],
         [sg.Button("N(x)-Diagramm"),
-        sg.Text('Photonensmoothing: ', size=(20, 1), font='Helvetica 16'),
-        sg.Slider((0,300),pho_smoothing,1,orientation="h",size=(20,15),key="Photonensmoothing")],
+        sg.Button("Maskenkonfiguration"),
+        sg.Text('Photonensmoothing: ', size=(18, 1), font='Helvetica 15'),
+        sg.Slider((0,300),pho_smoothing,1,orientation="h",size=(18,15),key="Photonensmoothing")],
         [sg.Checkbox('Automatisch N(x)-Graph aktualisieren (50 Frames Interval)', default=True, key="refresh_checkbox")],
         [sg.Canvas(size=(600,300),key='canvas')]
 ]
@@ -278,7 +282,6 @@ image_elem_right = window['-image_right-']
 ######################################################
 
 ############### Zeichnen der Histogramme ########################
-
 
 def draw_poisson_histo():  # definiert eine neuen Befehl (kann global aufgerufen werden)
     sample = np.random.poisson(phot_anzahl)  ## erstellt eine Menge von Zahlenwerten für das Histogram
@@ -422,7 +425,7 @@ while cap.isOpened():
         framedresize = cv2.resize(framed,dimension, interpolation=cv2.INTER_LINEAR)
 
         correctionmask = np.zeros(framedresize.shape[:2], dtype="uint8")
-        cv2.rectangle(correctionmask, (65,75),(130,100), 1,-1)  ## Standartmäßige Maske wenn sonst nicht anders bestimmt
+        cv2.rectangle(correctionmask, custommasktl,custommaskbl, 1,-1)  ## Standartmäßige Maske wenn sonst nicht anders bestimmt
 
         framed2 = cv2.bitwise_and(framedresize, framedresize, mask=correctionmask)
         nphotons = cv2.countNonZero(framed2) ### Zählung der Photonen im Bild
@@ -486,6 +489,26 @@ while cap.isOpened():
 
         if event == "Ausgangsvideo anzeigen":
             videoanzeigen = True
+
+        if event == "Interferenz_Maskenbox-anzeigen":
+            maskbox_median = median
+
+            custommaskarraytl = np.array(custommasktl)
+            custommaskarraybl = np.array(custommaskbl)
+            scaledmaskedboundtl = custommaskarraytl * 4
+            scaledmaskedboundbl = custommaskarraybl * 4
+            cv2.rectangle(maskbox_median,scaledmaskedboundtl,scaledmaskedboundbl,(0,255,0),3)
+            cv2.imshow("Maskenbox", maskbox_median)
+
+        if event == "Maskenkonfiguration":
+            intfmaskdata = sg.popup_get_text('Bitte neue Maskenposition (Format : "x1,y1,x2,y2" [x_max=180 y_max=144] eingeben:', 'Interferenzmuster_Maskenbox_Konfiguration')
+            sg.popup('Results', 'Folgende Maskenbox wird übernommen: ', intfmaskdata)
+            if intfmaskdata != "None":
+                custommaskarray = intfmaskdata.split(",",3)
+                custommasktl = (int(custommaskarray[0]),int(custommaskarray[1]))
+                custommaskbl = (int(custommaskarray[2]),int(custommaskarray[3]))
+            else:
+                break
 
         if videoanzeigen == True:
            cv2.imshow('mask auf dem Video', gray)  ## zeigt alle Bilder und stufen
